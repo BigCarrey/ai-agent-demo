@@ -1,0 +1,2657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>万能营销助手</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+
+/* ================================================================
+   DESIGN TOKENS
+   ================================================================ */
+:root {
+  /* backgrounds */
+  --bg-base:        #0B1828;
+  --bg-surface:     #122036;
+  --bg-card:        #192C47;
+  --bg-card-2:      #1E3254;
+  --bg-input:       #0F1F35;
+
+  /* borders */
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-mid:     rgba(255,255,255,0.10);
+  --border-strong:  rgba(255,255,255,0.18);
+  --border-gold:    rgba(212,166,73,0.40);
+
+  /* text */
+  --text-1:  #FFFFFF;
+  --text-2:  #90AACB;
+  --text-3:  #506278;
+
+  /* brand gold */
+  --gold:        #D4A649;
+  --gold-light:  #E8C06A;
+  --gold-dark:   #A07C2E;
+  --gold-glow:   rgba(212,166,73,0.20);
+
+  /* CRM agent — amber-orange (warmth / relationship) */
+  --crm-1:   #FF6B35;
+  --crm-2:   #FFAA00;
+  --crm-glow: rgba(255,107,53,0.18);
+
+  /* Sales agent — teal-cyan (precision / analytics) */
+  --sales-1: #00D4AA;
+  --sales-2: #009FCC;
+  --sales-glow: rgba(0,212,170,0.15);
+
+  /* status */
+  --red:     #FF4F5E;
+  --orange:  #FF9F43;
+  --green:   #2ED573;
+
+  /* radius */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+
+  /* shadows */
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.35);
+  --shadow-gold: 0 4px 20px rgba(212,166,73,0.22);
+  --shadow-crm:  0 4px 20px rgba(255,107,53,0.20);
+  --shadow-sales:0 4px 20px rgba(0,212,170,0.15);
+}
+
+/* ================================================================
+   RESET
+   ================================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: #060E1A;
+  font-family: 'Noto Sans SC', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { cursor: pointer; border: none; background: transparent; font-family: inherit; }
+
+/* ================================================================
+   DEMO STAGE — outer presentation wrapper
+   ================================================================ */
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  /* subtle radial glow behind phone */
+  background:
+    radial-gradient(ellipse 600px 400px at 50% 50%, rgba(30,50,84,0.6) 0%, transparent 70%),
+    #060E1A;
+}
+
+/* Phone bezel (demo only) */
+#phone-bezel {
+  background: linear-gradient(160deg, #2A2A2A 0%, #1A1A1A 60%, #222222 100%);
+  border-radius: 52px;
+  padding: 14px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.08),
+    0 0 0 2px rgba(0,0,0,0.8),
+    0 40px 100px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.12);
+  position: relative;
+}
+
+/* ================================================================
+   APP SHELL
+   ================================================================ */
+#app-shell {
+  width: 390px;
+  height: 844px;
+  border-radius: 40px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-base);
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+/* ================================================================
+   STATUS BAR
+   ================================================================ */
+.status-bar {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  flex-shrink: 0;
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.status-bar .time { font-family: 'Noto Sans SC', sans-serif; font-weight: 700; }
+.status-icons { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+
+/* Dynamic Island */
+.dynamic-island {
+  width: 118px; height: 32px;
+  background: #000;
+  border-radius: 20px;
+  position: absolute;
+  top: 6px; left: 50%; transform: translateX(-50%);
+  z-index: 10;
+}
+
+/* ================================================================
+   SCREEN STRUCTURE
+   ================================================================ */
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+.screen-header {
+  padding: 10px 20px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  background: rgba(11,24,40,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-subtle);
+  position: relative;
+  z-index: 2;
+}
+
+.header-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-1);
+  flex: 1;
+  letter-spacing: 0.02em;
+}
+.header-sub {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 1px;
+}
+.header-right {
+  font-size: 12px;
+  color: var(--gold);
+  padding: 4px 10px;
+  border: 1px solid var(--border-gold);
+  border-radius: 20px;
+}
+
+.screen-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* hide scrollbar */
+  scrollbar-width: none;
+}
+.screen-body::-webkit-scrollbar { display: none; }
+
+/* ================================================================
+   BOTTOM NAV
+   ================================================================ */
+#bottom-nav {
+  height: 68px;
+  display: flex;
+  flex-shrink: 0;
+  background: rgba(15,27,46,0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-subtle);
+  padding: 0 4px 8px;
+}
+
+.nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.02em;
+  position: relative;
+  transition: color 0.2s;
+}
+.nav-tab.active { color: var(--gold); }
+.nav-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  width: 20px; height: 2px;
+  background: var(--gold);
+  border-radius: 1px;
+}
+.nav-icon { font-size: 22px; line-height: 1; }
+
+/* ================================================================
+   BACK BUTTON
+   ================================================================ */
+.back-btn {
+  display: flex; align-items: center; gap: 4px;
+  color: var(--gold);
+  font-size: 13px;
+  padding: 4px 0;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.back-btn::before { content: '←'; font-size: 14px; }
+
+/* ================================================================
+   CARDS
+   ================================================================ */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+}
+.card-2 {
+  background: var(--bg-card-2);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+}
+/* Gold-bordered card for highlights */
+.card-gold {
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  border: 1px solid var(--border-gold);
+  box-shadow: var(--shadow-gold);
+  position: relative;
+  overflow: hidden;
+}
+.card-gold::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold-dark));
+}
+
+/* ================================================================
+   AI BADGES
+   ================================================================ */
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.ai-badge.crm {
+  background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(255,170,0,0.10));
+  border: 1px solid rgba(255,107,53,0.35);
+  color: var(--crm-2);
+  box-shadow: var(--shadow-crm);
+}
+.ai-badge.sales {
+  background: linear-gradient(135deg, rgba(0,212,170,0.12), rgba(0,159,204,0.10));
+  border: 1px solid rgba(0,212,170,0.30);
+  color: var(--sales-1);
+  box-shadow: var(--shadow-sales);
+}
+/* inline text version */
+.agent-dot-crm   { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--crm-2); margin-right: 4px; vertical-align: middle; }
+.agent-dot-sales { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--sales-1); margin-right: 4px; vertical-align: middle; }
+
+/* ================================================================
+   PRIORITY BADGES
+   ================================================================ */
+.pri {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+.pri-high { background: rgba(255,79,94,0.15);  color: var(--red);    border: 1px solid rgba(255,79,94,0.30);  }
+.pri-mid  { background: rgba(255,159,67,0.15); color: var(--orange); border: 1px solid rgba(255,159,67,0.30); }
+.pri-low  { background: rgba(80,98,120,0.30);  color: var(--text-3); border: 1px solid var(--border-subtle);  }
+
+/* ================================================================
+   TAGS / PILLS
+   ================================================================ */
+.tag {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-size: 11px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-mid);
+  color: var(--text-2);
+  margin: 2px 3px 2px 0;
+}
+.tag-gold {
+  background: rgba(212,166,73,0.12);
+  border-color: rgba(212,166,73,0.30);
+  color: var(--gold);
+}
+.tag-hot {
+  background: rgba(255,107,53,0.12);
+  border-color: rgba(255,107,53,0.30);
+  color: var(--crm-1);
+}
+
+/* ================================================================
+   WARMTH BAR
+   ================================================================ */
+.warmth-row { display: flex; align-items: center; gap: 8px; }
+.warmth-track {
+  flex: 1; height: 5px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px; overflow: hidden;
+}
+.warmth-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--sales-1) 0%, var(--gold) 50%, var(--crm-1) 100%);
+}
+.warmth-label { font-size: 11px; color: var(--text-3); white-space: nowrap; }
+
+/* ================================================================
+   BUTTONS
+   ================================================================ */
+.btn-primary {
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, #C09030 0%, var(--gold) 50%, #C09030 100%);
+  background-size: 200% auto;
+  color: #0B1828;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Noto Sans SC', sans-serif;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 18px rgba(212,166,73,0.30);
+  transition: background-position 0.3s, transform 0.1s;
+}
+.btn-primary:hover   { background-position: right center; }
+.btn-primary:active  { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.35; cursor: default; transform: none; }
+
+.btn-secondary {
+  width: 100%;
+  padding: 11px 20px;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 14px;
+  font-family: 'Noto Sans SC', sans-serif;
+  border: 1px solid var(--border-mid);
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-secondary:hover { border-color: var(--border-strong); color: var(--text-1); }
+
+.btn-sm {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text-2);
+  border: 1px solid var(--border-subtle);
+  transition: background 0.2s;
+  white-space: nowrap;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.btn-sm:hover { background: rgba(255,255,255,0.10); color: var(--text-1); }
+
+.btn-gold-sm {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: rgba(212,166,73,0.12);
+  color: var(--gold);
+  border: 1px solid rgba(212,166,73,0.30);
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+/* ================================================================
+   FORM ELEMENTS
+   ================================================================ */
+textarea, input[type="text"] {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r-sm);
+  color: var(--text-1);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 13px;
+  padding: 10px 12px;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+  line-height: 1.6;
+}
+textarea:focus, input[type="text"]:focus {
+  border-color: rgba(212,166,73,0.50);
+}
+textarea::placeholder { color: var(--text-3); }
+
+/* Custom checkbox */
+input[type="checkbox"] {
+  width: 18px; height: 18px;
+  accent-color: var(--gold);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   TABLES
+   ================================================================ */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th {
+  background: rgba(255,255,255,0.04);
+  color: var(--text-3);
+  font-weight: 500;
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+.data-table td {
+  padding: 9px 10px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table .val { color: var(--text-1); font-weight: 600; }
+.data-table .val-red { color: var(--red); font-weight: 700; font-size: 15px; }
+
+/* ================================================================
+   BAR CHART
+   ================================================================ */
+.bar-chart-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 110px;
+  padding: 0 4px;
+}
+.bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+.bar-group .bars { display: flex; align-items: flex-end; gap: 3px; }
+.bar {
+  width: 12px;
+  border-radius: 3px 3px 0 0;
+  position: relative;
+}
+.bar.b-low  { background: rgba(80,98,120,0.6); }
+.bar.b-mid  { background: linear-gradient(to top, var(--gold-dark), var(--gold)); }
+.bar.b-high { background: linear-gradient(to top, var(--crm-1), var(--crm-2)); }
+.bar-year { font-size: 11px; color: var(--text-3); }
+
+/* ================================================================
+   INVITE CARD PREVIEW
+   ================================================================ */
+.invite-card {
+  background: linear-gradient(145deg, #162840, #1D3355);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  text-align: center;
+  border: 1px solid var(--border-gold);
+  box-shadow: var(--shadow-gold);
+  position: relative;
+  overflow: hidden;
+}
+.invite-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold-dark));
+}
+.invite-card-sub   { font-size: 11px; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+.invite-card-event { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 700; color: var(--text-1); margin-bottom: 10px; }
+.invite-card-meta  { font-size: 12px; color: var(--text-2); margin: 3px 0; }
+.invite-card-divider { height: 1px; background: var(--border-gold); margin: 12px 0; opacity: 0.5; }
+.invite-card-highlight { font-size: 12px; color: var(--text-2); margin: 4px 0; }
+.invite-card-from  { font-size: 12px; color: var(--gold); margin-top: 10px; }
+
+/* ================================================================
+   SUCCESS / GENERATED STATES
+   ================================================================ */
+.success-box {
+  background: rgba(46,213,115,0.08);
+  border: 1px solid rgba(46,213,115,0.25);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.success-box .title { color: var(--green); font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+
+.sent-box {
+  background: rgba(212,166,73,0.08);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+}
+.sent-box .title { color: var(--gold); font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+
+/* ================================================================
+   STATS GRID
+   ================================================================ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0;
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+.stat-item {
+  text-align: center;
+  padding: 14px 8px;
+  border-right: 1px solid var(--border-subtle);
+}
+.stat-item:last-child { border-right: none; }
+.stat-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-label { font-size: 10px; color: var(--text-3); letter-spacing: 0.02em; }
+
+/* ================================================================
+   CLIENT CARD SPECIFICS
+   ================================================================ */
+.client-card {
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.2s;
+}
+.client-card.excluded { opacity: 0.45; }
+.client-card .name { font-size: 16px; font-weight: 700; color: var(--text-1); }
+.client-card .group { font-size: 12px; color: var(--text-3); margin: 4px 0; }
+.client-card .reason { font-size: 12px; color: var(--text-2); margin-top: 6px; line-height: 1.5; }
+
+/* ================================================================
+   TASK ITEMS
+   ================================================================ */
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.task-item:last-child { border-bottom: none; }
+.task-client { font-size: 14px; font-weight: 600; color: var(--text-1); }
+.task-action  { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+
+/* ================================================================
+   AGENT QUICK CARDS
+   ================================================================ */
+.agent-entry {
+  flex: 1;
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  padding: 16px 12px;
+  text-align: center;
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.agent-entry:hover { border-color: var(--border-gold); transform: translateY(-1px); }
+.agent-entry .ae-icon { font-size: 28px; margin-bottom: 8px; }
+.agent-entry .ae-name { font-size: 12px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; }
+.agent-entry .ae-desc { font-size: 11px; color: var(--text-3); }
+.agent-entry.crm  { border-top: 2px solid var(--crm-1); }
+.agent-entry.sales{ border-top: 2px solid var(--sales-1); }
+
+/* ================================================================
+   PLAN ITEMS
+   ================================================================ */
+.plan-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+  border: 1px solid var(--border-subtle);
+}
+.plan-date   { font-size: 11px; color: var(--gold); white-space: nowrap; min-width: 44px; font-weight: 600; }
+.plan-client { font-size: 14px; font-weight: 600; color: var(--text-1); }
+.plan-action { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+
+/* ================================================================
+   WECHAT MESSAGE BUBBLE
+   ================================================================ */
+.msg-bubble {
+  background: var(--bg-card-2);
+  border: 1px solid var(--border-mid);
+  border-radius: 4px 14px 14px 14px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.6;
+  max-width: 85%;
+}
+.msg-sender { font-size: 11px; color: var(--text-3); margin-bottom: 4px; }
+
+.suggestion-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.suggestion-card.selected {
+  border-color: var(--gold);
+  background: rgba(212,166,73,0.06);
+}
+.suggestion-card .text { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+
+.material-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.material-row:last-child { border-bottom: none; }
+.material-row .icon { font-size: 16px; }
+.material-row .title { flex: 1; font-size: 13px; color: var(--text-2); }
+
+/* ================================================================
+   PRODUCT HERO
+   ================================================================ */
+.product-hero {
+  background: linear-gradient(145deg, #162840 0%, #1D3255 100%);
+  border-radius: var(--r-xl);
+  padding: 20px;
+  border: 1px solid var(--border-gold);
+  box-shadow: var(--shadow-gold);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.product-hero::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold-dark));
+}
+.product-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; right: -40px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,166,73,0.08) 0%, transparent 70%);
+}
+.product-tag   { display: inline-block; padding: 3px 12px; background: rgba(212,166,73,0.18); color: var(--gold); border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 8px; border: 1px solid var(--border-gold); }
+.product-name  { font-family: 'Noto Serif SC', serif; font-size: 19px; font-weight: 700; color: var(--text-1); margin-bottom: 4px; }
+.product-sub   { font-size: 12px; color: var(--gold); margin-bottom: 16px; }
+.product-params { display: flex; justify-content: center; gap: 0; }
+.param-block { flex: 1; text-align: center; border-right: 1px solid var(--border-subtle); }
+.param-block:last-child { border-right: none; }
+.param-val   { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--gold); letter-spacing: 0.04em; }
+.param-label { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+/* ================================================================
+   FEATURE ROWS
+   ================================================================ */
+.feature-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.feature-row:last-child { border-bottom: none; }
+.feature-icon { font-size: 22px; width: 32px; text-align: center; }
+.feature-title { font-size: 13px; font-weight: 600; color: var(--text-1); }
+.feature-desc  { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+/* ================================================================
+   INCOME HIGHLIGHT
+   ================================================================ */
+.income-highlight {
+  background: linear-gradient(135deg, rgba(212,166,73,0.10), rgba(212,166,73,0.05));
+  border: 1px solid var(--border-gold);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.income-label { font-size: 13px; color: var(--text-2); }
+.income-val   { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--gold); letter-spacing: 0.05em; }
+.income-unit  { font-size: 14px; color: var(--gold); margin-left: 2px; }
+
+/* ================================================================
+   ACCORDION / SCRIPT STEPS
+   ================================================================ */
+.step-card {
+  background: var(--bg-card);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.step-header:hover { background: rgba(255,255,255,0.03); }
+.step-num {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(0,212,170,0.12);
+  border: 1px solid rgba(0,212,170,0.30);
+  color: var(--sales-1);
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step-title { flex: 1; font-size: 13px; font-weight: 600; color: var(--text-1); }
+.step-arrow { font-size: 10px; color: var(--text-3); }
+.step-content { padding: 0 14px 14px; }
+.script-quote {
+  background: rgba(0,212,170,0.05);
+  border-left: 2px solid var(--sales-1);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.7;
+  font-style: italic;
+}
+.qa-q { font-size: 12px; color: var(--red); font-weight: 600; margin-top: 10px; }
+.qa-a { font-size: 12px; color: var(--text-2); margin-top: 4px; line-height: 1.6; }
+
+/* ================================================================
+   NEEDS ANALYSIS
+   ================================================================ */
+.portrait-card {
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  border-left: 3px solid var(--sales-1);
+  border-top: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.risk-item { font-size: 13px; color: var(--red); margin-top: 6px; line-height: 1.5; }
+.risk-item::before { content: '▲ '; font-size: 10px; }
+.gap-total  { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--red); letter-spacing: 0.04em; margin-top: 8px; }
+.gap-total-label { font-size: 12px; color: var(--text-3); }
+.need-pill {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(0,212,170,0.10);
+  border: 1px solid rgba(0,212,170,0.28);
+  color: var(--sales-1);
+  border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  margin: 4px 6px 4px 0;
+}
+
+/* ================================================================
+   SECTION TITLE (inline)
+   ================================================================ */
+.sec-title { font-size: 12px; font-weight: 600; color: var(--text-3); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px; }
+
+/* ================================================================
+   PROFILE GENERATED
+   ================================================================ */
+.profile-card {
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  border: 1px solid var(--border-gold);
+  box-shadow: var(--shadow-gold);
+}
+.profile-name { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; color: var(--text-1); }
+.profile-meta { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.profile-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; }
+.profile-row .k { color: var(--text-3); }
+.profile-row .v { color: var(--text-2); font-weight: 500; }
+.profile-next { font-size: 12px; color: var(--gold); margin-top: 10px; font-weight: 600; }
+
+/* ================================================================
+   HOME GREETING HEADER
+   ================================================================ */
+.home-header {
+  padding: 12px 20px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.greeting-main { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; color: var(--text-1); }
+.greeting-sub  { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.avatar-circle {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 700; color: #0B1828;
+  border: 2px solid var(--border-gold);
+  box-shadow: var(--shadow-gold);
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   MISC UTILS
+   ================================================================ */
+.row { display: flex; align-items: center; gap: 8px; }
+.col { display: flex; flex-direction: column; gap: 4px; }
+.spacer { flex: 1; }
+.divider { height: 1px; background: var(--border-subtle); }
+.text-1 { color: var(--text-1); }
+.text-2 { color: var(--text-2); }
+.text-3 { color: var(--text-3); }
+.text-gold { color: var(--gold); }
+.text-red  { color: var(--red); }
+.text-green{ color: var(--green); }
+.fw-7 { font-weight: 700; }
+.fw-6 { font-weight: 600; }
+.fs-12 { font-size: 12px; }
+.fs-13 { font-size: 13px; }
+.fs-14 { font-size: 14px; }
+.fs-15 { font-size: 15px; }
+.serif { font-family: 'Noto Serif SC', serif; }
+.mt-4  { margin-top: 4px; }
+.mt-8  { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.lh-16 { line-height: 1.6; }
+
+/* Notification dot on bell */
+.notif-bell { position: relative; font-size: 20px; cursor: pointer; }
+.notif-bell::after {
+  content: '';
+  position: absolute; top: 0; right: -1px;
+  width: 7px; height: 7px;
+  background: var(--red);
+  border-radius: 50%;
+  border: 1px solid var(--bg-base);
+}
+
+/* Wechat copy box */
+.wechat-copy {
+  background: var(--bg-input);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.7;
+}
+
+/* ================================================================
+   ANIMATION KEYFRAMES
+   ================================================================ */
+
+/* Phone shell entrance */
+@keyframes shellReveal {
+  from { opacity:0; transform: scale(0.94) translateY(16px); }
+  to   { opacity:1; transform: scale(1)    translateY(0); }
+}
+#phone-bezel { animation: shellReveal 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ── Screen transitions ─────────────────────────────────────── */
+@keyframes slideFromRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes slideFromLeft {
+  from { transform: translateX(-28px); opacity:0; }
+  to   { transform: translateX(0);     opacity:1; }
+}
+@keyframes tabFadeUp {
+  from { opacity:0; transform: translateY(8px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+.anim-forward { animation: slideFromRight 0.30s cubic-bezier(0.22,1,0.36,1) both; }
+.anim-back    { animation: slideFromLeft  0.26s cubic-bezier(0.22,1,0.36,1) both; }
+.anim-tab     { animation: tabFadeUp      0.22s ease-out both; }
+
+/* Screen wrapper: keeps flex layout intact */
+.screen-wrap { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* ── Stagger list items ─────────────────────────────────────── */
+@keyframes itemReveal {
+  from { opacity:0; transform: translateY(14px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+.s-item { animation: itemReveal 0.32s ease-out both; }
+.s-item:nth-child(1) { animation-delay: 0.04s; }
+.s-item:nth-child(2) { animation-delay: 0.09s; }
+.s-item:nth-child(3) { animation-delay: 0.14s; }
+.s-item:nth-child(4) { animation-delay: 0.19s; }
+.s-item:nth-child(5) { animation-delay: 0.24s; }
+.s-item:nth-child(6) { animation-delay: 0.29s; }
+
+/* ── Fade-in for generated results ─────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity:0; transform: translateY(20px) scale(0.98); }
+  to   { opacity:1; transform: translateY(0)    scale(1); }
+}
+.reveal { animation: fadeInUp 0.40s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ── AI loading dots ────────────────────────────────────────── */
+@keyframes dotBounce {
+  0%,80%,100% { transform: translateY(0);    opacity:0.3; }
+  40%          { transform: translateY(-6px); opacity:1; }
+}
+.ai-generating {
+  display: flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:16px; padding: 36px 0;
+}
+.ai-dot-row { display:flex; gap:8px; }
+.ai-dot {
+  width:9px; height:9px; border-radius:50%;
+  animation: dotBounce 1.1s infinite ease-in-out;
+}
+.ai-dot.crm-dot  { background: var(--crm-2); }
+.ai-dot.sales-dot{ background: var(--sales-1); }
+.ai-dot:nth-child(2){ animation-delay:0.18s; }
+.ai-dot:nth-child(3){ animation-delay:0.36s; }
+.ai-generating-label { font-size:13px; color:var(--text-3); letter-spacing:0.03em; }
+
+/* ── Typing cursor ──────────────────────────────────────────── */
+@keyframes blink {
+  0%,100% { opacity:1; }
+  50%     { opacity:0; }
+}
+.t-cursor {
+  display: inline-block; width:2px; height:1.1em;
+  background: currentColor; margin-left:1px;
+  vertical-align: text-bottom;
+  animation: blink 0.75s step-start infinite;
+}
+
+/* ── Chart bars (CSS transition driven by JS state) ─────────── */
+.bar { transition: height 0.55s cubic-bezier(0.34,1.4,0.64,1); }
+
+/* ── Warmth fill transition ─────────────────────────────────── */
+.warmth-fill { transition: width 0.7s cubic-bezier(0.22,1,0.36,1); }
+
+/* ── Sent / success celebration ─────────────────────────────── */
+@keyframes successPop {
+  0%   { opacity:0; transform: scale(0.90); }
+  60%  { transform: scale(1.03); }
+  100% { opacity:1; transform: scale(1); }
+}
+.success-pop { animation: successPop 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ── Income number glow pulse ───────────────────────────────── */
+@keyframes goldPulse {
+  0%,100% { text-shadow: 0 0 0 rgba(212,166,73,0); }
+  50%     { text-shadow: 0 0 18px rgba(212,166,73,0.55); }
+}
+.gold-pulse { animation: goldPulse 1.6s ease-in-out 0.8s infinite; }
+
+/* ── Bottom nav indicator slide ─────────────────────────────── */
+.nav-tab::after { transition: transform 0.25s ease, opacity 0.25s ease; }
+
+/* ================================================================
+   INTERACT REDESIGN — 触客备料页
+   ================================================================ */
+.process-bar {
+  display: flex; align-items: flex-start; padding: 10px 16px 8px;
+  background: rgba(11,24,40,0.95); gap: 0; flex-shrink: 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.process-step {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 3px; position: relative;
+}
+.process-step + .process-step::before {
+  content: ''; position: absolute; left: -50%; top: 11px;
+  width: 100%; height: 1px; background: var(--border-subtle);
+}
+.ps-icon {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; z-index: 1;
+}
+.ps-icon.done    { background: rgba(46,213,115,0.18); color: var(--green); border: 1px solid rgba(46,213,115,0.35); }
+.ps-icon.active  { background: linear-gradient(135deg, var(--crm-1), var(--crm-2)); color: #0B1828; }
+.ps-icon.pending { background: rgba(255,255,255,0.04); color: var(--text-3); border: 1px solid var(--border-subtle); }
+.ps-label { font-size: 10px; color: var(--text-3); letter-spacing: 0.01em; }
+.ps-label.active { color: var(--crm-2); font-weight: 600; }
+
+.interact-client-card {
+  background: var(--bg-card); border-radius: var(--r-lg);
+  padding: 14px 16px; border: 1px solid var(--border-subtle);
+  display: flex; align-items: center; gap: 14px;
+}
+.client-avatar-lg {
+  width: 48px; height: 48px; border-radius: 10px;
+  background: linear-gradient(135deg, #07C160, #05A350);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 20px; font-weight: 700; flex-shrink: 0;
+}
+.client-last-contact { text-align: right; flex-shrink: 0; }
+.client-last-contact .lc-label { font-size: 11px; color: var(--text-3); }
+.client-last-contact .lc-value { font-size: 15px; color: var(--crm-1); font-weight: 700; margin-top: 2px; }
+
+.ai-analysis-box {
+  background: #0D1E35; border: 1px solid rgba(255,107,53,0.22);
+  border-radius: var(--r-lg); padding: 14px 16px;
+}
+.ai-analysis-text { font-size: 13px; color: var(--text-2); line-height: 1.75; margin-top: 8px; }
+.ai-analysis-text strong { color: var(--crm-2); font-weight: 700; }
+.ai-strategy {
+  margin-top: 10px; font-size: 12px; color: var(--text-3);
+  background: rgba(255,255,255,0.04); border-radius: var(--r-sm);
+  padding: 8px 10px; line-height: 1.65;
+}
+.script-section-hd {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 700; color: var(--text-1);
+  padding-left: 10px; border-left: 3px solid var(--crm-1);
+  margin-bottom: 10px;
+}
+.script-text-box {
+  background: var(--bg-card); border-radius: var(--r-md);
+  padding: 14px 16px; border: 1px solid var(--border-mid);
+  font-size: 13px; color: var(--text-2); line-height: 1.8;
+}
+.script-text-box strong { color: var(--text-1); font-weight: 700; }
+.btn-warm {
+  width: 100%; padding: 13px 20px; border-radius: var(--r-md);
+  background: linear-gradient(135deg, #A0342A, #C0392B, #A0342A);
+  background-size: 200%; color: white; font-size: 14px; font-weight: 700;
+  font-family: 'Noto Sans SC', sans-serif; letter-spacing: 0.03em;
+  box-shadow: 0 4px 16px rgba(192,57,43,0.35);
+  transition: background-position 0.3s, transform 0.1s;
+}
+.btn-warm:hover  { background-position: right center; }
+.btn-warm:active { transform: scale(0.98); }
+.invite-preview-mini {
+  background: var(--bg-card-2); border: 1px solid var(--border-gold);
+  border-radius: var(--r-md); padding: 12px 14px;
+}
+.invite-preview-mini .ipm-name { font-weight: 700; font-size: 14px; color: var(--text-1); margin-bottom: 6px; }
+.invite-preview-mini .ipm-row  { font-size: 12px; color: var(--text-2); margin: 3px 0; }
+
+/* ================================================================
+   WECHAT TRANSITION SCREEN
+   ================================================================ */
+.wechat-transition {
+  flex: 1; background: #1A1A1A; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 20px;
+  padding: 40px; position: relative;
+}
+.wct-icon-wrap {
+  position: relative; width: 90px; height: 90px;
+  animation: iconBounce 0.6s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes iconBounce {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.wct-icon {
+  width: 90px; height: 90px; border-radius: 20px;
+  background: linear-gradient(145deg, #11B053, #07C160);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px; box-shadow: 0 8px 30px rgba(7,193,96,0.35);
+}
+.wct-bot-badge {
+  position: absolute; top: -4px; right: -4px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #E53E3E; border: 2px solid #1A1A1A;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.wct-title {
+  font-family: 'Noto Serif SC', serif; font-size: 22px; font-weight: 700;
+  color: white; text-align: center; letter-spacing: 0.02em;
+}
+.wct-sub  { font-size: 13px; color: rgba(255,255,255,0.45); text-align: center; line-height: 1.75; }
+.wct-progress-track {
+  width: 200px; height: 3px; background: rgba(255,255,255,0.12);
+  border-radius: 2px; overflow: hidden;
+}
+.wct-progress-fill { height: 100%; background: #07C160; border-radius: 2px; transition: width 0.08s linear; }
+.wct-companion { font-size: 12px; color: rgba(255,255,255,0.28); text-align: center; }
+.wct-status {
+  position: absolute; bottom: 52px;
+  font-size: 12px; color: rgba(255,255,255,0.45);
+  animation: fadeInUp 0.5s ease-out 0.8s both;
+}
+
+/* ================================================================
+   WECHAT CHAT SIMULATION
+   ================================================================ */
+.wechat-screen {
+  flex: 1; display: flex; flex-direction: column;
+  background: #EDEDED; overflow: hidden;
+  font-family: 'Noto Sans SC', system-ui, sans-serif;
+}
+.wechat-header {
+  background: #1E1E1E; padding: 10px 16px 12px;
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0; box-shadow: 0 1px 6px rgba(0,0,0,0.3);
+}
+.wc-back { color: white; font-size: 22px; padding: 0 2px; line-height: 1; }
+.wc-avatar {
+  width: 36px; height: 36px; border-radius: 7px;
+  background: #07C160; color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; flex-shrink: 0;
+}
+.wc-contact-name { color: white; font-size: 16px; font-weight: 600; line-height: 1.2; }
+.wc-contact-sub  { color: rgba(255,255,255,0.45); font-size: 11px; }
+.wc-ai-badge {
+  margin-left: auto; background: rgba(7,193,96,0.15);
+  border: 1px solid rgba(7,193,96,0.5); border-radius: 12px;
+  padding: 4px 10px; display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; color: #07C160; white-space: nowrap;
+}
+.wc-ai-dot { width: 6px; height: 6px; border-radius: 50%; background: #07C160; animation: dotBounce 1.5s infinite; }
+.wc-messages { flex: 1; overflow-y: auto; padding: 12px 12px 6px; scrollbar-width: none; }
+.wc-messages::-webkit-scrollbar { display: none; }
+.wc-timestamp { text-align: center; font-size: 11px; color: #999; margin: 4px 0 10px; }
+.wc-timestamp span { background: rgba(0,0,0,0.07); padding: 2px 10px; border-radius: 10px; }
+.wc-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+.wc-row.sent { flex-direction: row-reverse; }
+.wc-msg-avatar {
+  width: 36px; height: 36px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+}
+.wc-msg-avatar.client { background: #07C160; color: white; }
+.wc-msg-avatar.agent  { background: #C0392B; color: white; }
+.wc-bubble {
+  max-width: 74%; padding: 9px 12px;
+  font-size: 14px; line-height: 1.6; color: #1A1A1A; word-break: break-all;
+}
+.wc-bubble.received { background: white;   border-radius: 2px 10px 10px 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.wc-bubble.sent     { background: #95EC69; border-radius: 10px 2px 10px 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.wc-typing-bubble {
+  background: white; border-radius: 2px 10px 10px 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  padding: 10px 14px; display: flex; gap: 4px; align-items: center;
+}
+.wc-typing-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #BBBBBB;
+  animation: dotBounce 1.1s infinite ease-in-out;
+}
+.wc-typing-dot:nth-child(2){ animation-delay:0.18s; }
+.wc-typing-dot:nth-child(3){ animation-delay:0.36s; }
+.wc-ai-panel {
+  background: white; border-radius: 12px 12px 0 0;
+  box-shadow: 0 -3px 20px rgba(0,0,0,0.12); flex-shrink: 0;
+  animation: panelSlideUp 0.35s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes panelSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.wc-panel-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px 8px; border-bottom: 1px solid #F0F0F0;
+}
+.wc-panel-ai-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: #F0F7F4; border: 1px solid rgba(7,193,96,0.3);
+  border-radius: 20px; padding: 3px 10px;
+  font-size: 11px; font-weight: 600; color: #07C160;
+}
+.wc-panel-collapse { margin-left: auto; font-size: 12px; color: #999; }
+.wc-panel-body { padding: 10px 14px 12px; }
+.wc-hint { font-size: 12px; color: #666; line-height: 1.6; margin-bottom: 10px; }
+.wc-hint strong { color: #1A1A1A; font-weight: 700; }
+.wc-script-quote {
+  background: #F7F9F7; border-left: 3px solid #07C160;
+  border-radius: 2px 6px 6px 2px; padding: 10px 12px;
+  font-size: 13px; color: #333; line-height: 1.65;
+}
+.wc-script-quote strong { font-weight: 700; color: #1A1A1A; }
+.wc-panel-btns { display: flex; gap: 10px; margin-top: 12px; }
+.wc-btn-outline {
+  flex: 1; padding: 9px 0; text-align: center; border: 1px solid #DDD;
+  border-radius: 6px; font-size: 13px; font-weight: 600; color: #555;
+  background: white; font-family: 'Noto Sans SC', sans-serif;
+}
+.wc-btn-dark {
+  flex: 2; padding: 9px 0; text-align: center; background: #2C3E6B;
+  border-radius: 6px; font-size: 13px; font-weight: 700; color: white;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.wc-btn-red {
+  flex: 2; padding: 9px 0; text-align: center; background: #C0392B;
+  border-radius: 6px; font-size: 13px; font-weight: 700; color: white;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.wc-invite-card {
+  background: #F5F5F5; border: 1px solid #E0E0E0; border-radius: 8px;
+  padding: 12px; margin: 8px 0;
+}
+.wc-invite-event { font-size: 15px; font-weight: 700; color: #1A1A1A; margin-bottom: 8px; }
+.wc-invite-row { font-size: 13px; color: #555; margin: 4px 0; line-height: 1.5; }
+.wc-input-bar {
+  background: #F2F2F2; border-top: 1px solid #E0E0E0;
+  padding: 8px 14px; display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0; height: 50px;
+}
+.wc-input-field {
+  flex: 1; background: white; border: 1px solid #E8E8E8;
+  border-radius: 5px; padding: 6px 10px; font-size: 14px; color: #BBB;
+  height: 34px; pointer-events: none; font-family: 'Noto Sans SC', sans-serif;
+}
+.wc-input-icon { font-size: 22px; color: #888; }
+@keyframes msgAppear {
+  from { opacity:0; transform: translateY(8px) scale(0.96); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+.msg-new { animation: msgAppear 0.3s ease-out both; }
+
+/* ================================================================
+   WECHAT PLAN CARD — 方案卡片气泡 & 浮层预览
+   ================================================================ */
+.wc-plan-card-bubble {
+  max-width: 74%; background: white;
+  border-radius: 2px 10px 10px 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.10);
+  overflow: hidden;
+}
+.wc-plan-card-header {
+  background: linear-gradient(135deg, #9B1A0E 0%, #C0392B 50%, #E05040 100%);
+  padding: 10px 12px 9px;
+}
+.wc-plan-card-badge { font-size: 10px; color: rgba(255,255,255,0.70); letter-spacing: 0.03em; font-weight: 500; }
+.wc-plan-card-name  { font-size: 14px; font-weight: 700; color: white; margin: 3px 0 2px; line-height: 1.3; }
+.wc-plan-card-sub   { font-size: 11px; color: rgba(255,255,255,0.65); }
+.wc-plan-card-body  { padding: 10px 12px 12px; }
+.wc-plan-card-params {
+  display: flex; border: 1px solid #EBEBEB;
+  border-radius: 6px; overflow: hidden; margin-bottom: 8px;
+}
+.wc-plan-card-param { flex: 1; padding: 7px 4px; text-align: center; border-right: 1px solid #EBEBEB; }
+.wc-plan-card-param:last-child { border-right: none; }
+.wc-plan-card-param-val   { font-size: 13px; font-weight: 700; color: #1A1A1A; }
+.wc-plan-card-param-label { font-size: 10px; color: #999; margin-top: 2px; }
+.wc-plan-card-hl {
+  background: #FFF8EE; border: 1px solid #FFDEA0; border-radius: 5px;
+  padding: 6px 10px; font-size: 12px; color: #7A4C00; line-height: 1.5;
+}
+.wc-plan-card-hl strong { color: #B83020; font-weight: 700; }
+
+/* Floating panel plan preview */
+.wc-plan-preview {
+  background: #F8F8F8; border: 1px solid #E8E8E8;
+  border-radius: 8px; overflow: hidden; margin: 8px 0;
+}
+.wc-plan-preview-hd {
+  background: linear-gradient(135deg, #9B1A0E 0%, #C0392B 50%, #E05040 100%);
+  padding: 9px 12px;
+}
+.wc-plan-preview-badge { font-size: 10px; color: rgba(255,255,255,0.68); }
+.wc-plan-preview-name  { font-size: 14px; font-weight: 700; color: white; margin-top: 2px; }
+.wc-plan-preview-bd    { padding: 9px 12px 10px; }
+.wc-plan-preview-params { display: flex; gap: 0; border: 1px solid #E8E8E8; border-radius: 5px; overflow: hidden; margin-bottom: 7px; }
+.wc-plan-preview-param { flex: 1; padding: 6px 4px; text-align: center; border-right: 1px solid #E8E8E8; }
+.wc-plan-preview-param:last-child { border-right: none; }
+.wc-pp-val   { font-size: 13px; font-weight: 700; color: #1A1A1A; }
+.wc-pp-label { font-size: 10px; color: #AAA; margin-top: 1px; }
+.wc-plan-preview-hl {
+  background: #FFF8EE; border: 1px solid #FFDEA0; border-radius: 4px;
+  padding: 5px 8px; font-size: 12px; color: #7A4C00; line-height: 1.5;
+}
+.wc-plan-preview-hl strong { color: #B83020; font-weight: 700; }
+
+/* success state panel */
+.wc-success-hint {
+  display: flex; align-items: center; gap: 8px;
+  background: #F0FAF0; border: 1px solid #A8D8A8; border-radius: 7px;
+  padding: 10px 12px; font-size: 13px; color: #2D6A2D; line-height: 1.55;
+  margin-bottom: 10px;
+}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect, useCallback } = React;
+
+/* ── CountUp: 数字滚动计数 ─────────────────────────────────── */
+function CountUp({ to, suffix='', decimals=0, duration=800, delay=0 }) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    const t0 = setTimeout(() => {
+      const start = performance.now();
+      const tick = (now) => {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        setVal(+(to * eased).toFixed(decimals));
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, delay);
+    return () => clearTimeout(t0);
+  }, [to, duration, delay, decimals]);
+  return <>{decimals ? val.toFixed(decimals) : val.toLocaleString()}{suffix}</>;
+}
+
+/* ── TypedText: AI 打字效果 ───────────────────────────────── */
+function TypedText({ text, speed=14, delay=0, className, style }) {
+  const [shown, setShown] = useState('');
+  const [done,  setDone]  = useState(false);
+  useEffect(() => {
+    setShown(''); setDone(false);
+    const t0 = setTimeout(() => {
+      let i = 0;
+      const iv = setInterval(() => {
+        i++;
+        setShown(text.slice(0, i));
+        if (i >= text.length) { clearInterval(iv); setDone(true); }
+      }, speed);
+      return () => clearInterval(iv);
+    }, delay);
+    return () => clearTimeout(t0);
+  }, [text, speed, delay]);
+  return (
+    <span className={className} style={style}>
+      {shown}{!done && <span className="t-cursor" />}
+    </span>
+  );
+}
+
+/* ── AIGenerating: 生成等待态 ──────────────────────────────── */
+function AIGenerating({ type='crm', label='AI 正在分析...', duration=1800, onDone }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, duration);
+    return () => clearTimeout(t);
+  }, [duration]);
+  return (
+    <div className="ai-generating">
+      <AIBadge type={type} />
+      <div className="ai-dot-row">
+        <span className={`ai-dot ${type}-dot`} />
+        <span className={`ai-dot ${type}-dot`} />
+        <span className={`ai-dot ${type}-dot`} />
+      </div>
+      <span className="ai-generating-label">{label}</span>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MOCK DATA  (unchanged from framework)
+// ═══════════════════════════════════════════════════════════
+const DATA = {
+  agent: { name: '王芳', initials: '王', org: 'XX机构 · 营业区', level: '绩优代理人', monthIncome: 32000, monthTarget: 50000, completionRate: 68, todayFollowUp: 24, todayPending: 7 },
+  recommendedClients: [
+    { id:'c1', name:'陈诚', age:45, priority:'high', warmth:60, assets:'600万+', group:'资产规模>600万',   tags:['存款到期','养老需求'], reason:'保财保、保养老需求强烈，同类转化率约10%', lastContact:'6个月前', nextAction:'发送方案，准备促成',     checked:true  },
+    { id:'c2', name:'张华', age:52, priority:'mid',  warmth:45, assets:'300万+', group:'旺财余额>5万',     tags:['旺财>5万','理财偏好'], reason:'理财偏好明显，近期理财到期',               lastContact:'3个月前', nextAction:'活动邀约未回复，继续跟进', checked:true  },
+    { id:'c3', name:'李芳', age:38, priority:'mid',  warmth:70, assets:'200万+', group:'银行存款到期',     tags:['存款到期','高温'],    reason:'下月存款到期，时机好，主动咨询过',            lastContact:'2周前',   nextAction:'存款下月到期，联系时机好', checked:true  },
+    { id:'c4', name:'王强', age:48, priority:'high', warmth:55, assets:'800万+', group:'资产规模>600万',   tags:['高净值','存款到期'],  reason:'高净值客户，存款4月到期',                     lastContact:'1个月前', nextAction:'优先邀约拜访',             checked:true  },
+    { id:'c5', name:'刘梅', age:55, priority:'mid',  warmth:40, assets:'150万+', group:'三年前购买理财',   tags:['理财到期','养老需求'],reason:'三年前购买过理财产品，到期续保机会',          lastContact:'5个月前', nextAction:'产品到期提醒',             checked:true  },
+    { id:'c6', name:'李明', age:41, priority:'low',  warmth:20, assets:'100万+', group:'银行存款到期',     tags:['低活跃','待激活'],    reason:'近半年无互动，需要重新激活',                   lastContact:'1年前',   nextAction:'暂不跟进',                 checked:false, excluded:true },
+  ],
+  generatedPlan: [
+    { date:'4月1日',  client:'陈诚', action:'发送存款到期提醒素材' },
+    { date:'4月3日',  client:'张华', action:'司庆活动邀请'         },
+    { date:'4月5日',  client:'李芳', action:'存款到期关怀电话'     },
+    { date:'4月8日',  client:'王强', action:'高端客户专属邀约'     },
+    { date:'4月10日', client:'陈诚', action:'方案跟进，准备促成'   },
+    { date:'4月12日', client:'刘梅', action:'理财到期提醒+新品推荐'},
+  ],
+  wechatAssist: {
+    clientName: '陈诚',
+    clientMessage: '最近理财收益不太好，不知道怎么配置...',
+    suggestions: [
+      '陈先生，您提到的这个问题很关键！当前市场环境下，很多客户都在思考资产配置的问题。我最近在了解一款很适合您情况的产品，方便抽时间聊聊吗？😊',
+      '这个问题问得很好！理财收益下行正好是重新规划资产的好时机。我们可以一起看看您目前的配置情况，帮您找找机会？',
+      '陈先生您好，最近市场波动确实比较大。建议您适当考虑一些稳健增值的配置方式，我正好有司庆专属方案想和您分享～',
+    ],
+    materials: [
+      { title:'司庆养老规划科普文章',     type:'article' },
+      { title:'存款到期后的3种配置方案', type:'article' },
+      { title:'平安添益产品介绍',         type:'product' },
+    ],
+  },
+  inviteContent: {
+    event:'司庆财富管理专题讲座', date:'4月12日（周五）14:00', location:'营业区3楼会议室',
+    highlights:['养老规划实战分享','司庆专属权益解读','一对一财务诊断'],
+    from:'王芳',
+    wechatMsg:'陈先生您好！我们营业区本月12号下午将举办一场财富管理专题讲座，主题是"司庆专属养老规划"。结合您之前聊到的资产配置问题，这次讲座非常适合您！地点在营业区3楼，时间是下午2点。名额有限，特别为您预留了一个，方便参加吗？😊',
+  },
+  clientProfile: { name:'陈诚', age:45, gender:'男', occupation:'企业主', annualIncome:50, assets:'约600万+', family:'配偶+1子+父母', interests:['资产配置','养老规划','财富传承'], activityNote:'对养老险非常感兴趣，提到担忧退休后生活质量下降，家里还有老人要照顾', nextStep:'产品方案设计', priority:'high' },
+  needsAnalysis: {
+    portrait: { age:45, group:'社会中坚群体', income:'约50万/年' },
+    risks:    ['资产配置失衡（过于集中存款/理财）','养老储备严重不足','家庭保障缺口较大'],
+    gaps: [
+      { type:'财富保障缺口', current:'不足',   amount:160, unit:'万' },
+      { type:'养老储备缺口', current:'严重不足', amount:180, unit:'万' },
+    ],
+    totalGap: 340, coreNeeds:['保财保','保养老'],
+  },
+  product: {
+    name:'平安添益·居家养老', subName:'金草分红司庆版', tag:'司庆主推',
+    annualPremium:20, paymentYears:6, totalPremium:120,
+    features:[
+      { icon:'📈', title:'现金持续增值', desc:'保单现金价值稳定增长' },
+      { icon:'💰', title:'享受分红收益', desc:'年度分红，收益可观'   },
+      { icon:'🏠', title:'居家养老服务', desc:'配套专业养老照护'     },
+    ],
+    chartData:[
+      { year:5,  low:90,  mid:108, high:125 },
+      { year:10, low:140, mid:180, high:220 },
+      { year:15, low:200, mid:268, high:340 },
+      { year:20, low:270, mid:380, high:500 },
+    ],
+    agentIncome:16880, solvesGap:'养老缺口约180万',
+  },
+  salesScript: {
+    steps:[
+      { step:1, title:'认同痛点（30秒）',    script:'"陈先生，您刚才提到退休后生活质量的问题，这确实是很多像您一样成功人士的核心困扰。我们测算了一下，以您目前的资产配置方式，退休后可能存在较大缺口..."' },
+      { step:2, title:'呈现缺口（数字冲击）', script:'"根据您的情况，我们专业测算显示：养老缺口约180万、财富保障缺口约160万，合计约340万。提早规划是最好的解决方案..."' },
+      { step:3, title:'产品切入（司庆限定）', script:'"正好我们司庆节推出了一款专为像您这样需求的客户设计的产品——平安添益·居家养老。每年20万，6年交完，既能养老，又有分红..."' },
+      { step:4, title:'处理常见异议', qa:[
+        { q:'"保费太高了"',  a:'"陈先生，20万年交相当于月均1.67万，以您的收入水平非常轻松，而且这是为您未来30年的品质生活做保障..."' },
+        { q:'"再考虑考虑"',  a:'"完全理解，不过司庆优惠名额有限，而且您的存款下个月就到期了，正好是最佳配置时机..."' },
+      ]},
+      { step:5, title:'促成话术', script:'"陈先生，我帮您把方案发到您手机上，您回去看看，我这边预留一个名额给您，您看今天方便签一下吗？"' },
+    ],
+  },
+};
+
+
+// ═══════════════════════════════════════════════════════════
+//  SHARED COMPONENTS
+// ═══════════════════════════════════════════════════════════
+
+function StatusBar() {
+  return (
+    <div className="status-bar">
+      <span className="time">9:41</span>
+      <div className="dynamic-island" />
+      <div className="status-icons">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="white" opacity="0.9">
+          <rect x="0"  y="4"  width="3" height="8" rx="1"/>
+          <rect x="4"  y="2.5"width="3" height="9.5" rx="1"/>
+          <rect x="8"  y="1"  width="3" height="11" rx="1"/>
+          <rect x="12" y="0"  width="3" height="12" rx="1"/>
+        </svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="white" opacity="0.9">
+          <path d="M8 2.4C10.8 2.4 13.3 3.6 15 5.5L16 4.4C14 2.2 11.1 0.8 8 0.8C4.9 0.8 2 2.2 0 4.4L1 5.5C2.7 3.6 5.2 2.4 8 2.4Z"/>
+          <path d="M8 5.6C9.8 5.6 11.4 6.4 12.5 7.6L13.5 6.5C12.1 5 10.2 4 8 4C5.8 4 3.9 5 2.5 6.5L3.5 7.6C4.6 6.4 6.2 5.6 8 5.6Z"/>
+          <circle cx="8" cy="10.5" r="1.5"/>
+        </svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+          <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="white" strokeOpacity="0.4"/>
+          <rect x="2" y="2" width="17" height="8" rx="2" fill="white"/>
+          <rect x="22" y="3.5" width="2.5" height="5" rx="1.25" fill="white" fillOpacity="0.5"/>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function Header({ title, sub, onBack, rightLabel, onRight }) {
+  return (
+    <div className="screen-header">
+      {onBack && <button className="back-btn" onClick={onBack} />}
+      <div className="col" style={{ flex: 1 }}>
+        <span className="header-title">{title}</span>
+        {sub && <span style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1 }}>{sub}</span>}
+      </div>
+      {rightLabel && <button className="header-right" onClick={onRight}>{rightLabel}</button>}
+    </div>
+  );
+}
+
+function AIBadge({ type = 'crm', children }) {
+  return (
+    <div className={`ai-badge ${type}`}>
+      {type === 'crm'
+        ? <><span>🌟</span><span>{children || '客户经营智能体'}</span></>
+        : <><span>🎯</span><span>{children || '销售智能体'}</span></>
+      }
+    </div>
+  );
+}
+
+function PriBadge({ level }) {
+  const map = { high: ['pri pri-high','高优'], mid: ['pri pri-mid','中优'], low: ['pri pri-low','低优'] };
+  const [cls, label] = map[level] || map.low;
+  return <span className={cls}>{label}</span>;
+}
+
+function WarmthBar({ value }) {
+  const [w, setW] = useState(0);
+  useEffect(() => { const t = setTimeout(() => setW(value), 80); return () => clearTimeout(t); }, [value]);
+  return (
+    <div className="warmth-row">
+      <span className="warmth-label" style={{ minWidth:52 }}>客户温度</span>
+      <div className="warmth-track"><div className="warmth-fill" style={{ width: w + '%' }} /></div>
+      <span className="warmth-label" style={{ minWidth:28, textAlign:'right' }}>{value}%</span>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  SCREEN 1 — 首页
+// ═══════════════════════════════════════════════════════════
+function HomeScreen({ nav }) {
+  return (
+    <div className="screen">
+      {/* custom home header */}
+      <div className="home-header">
+        <div>
+          <div className="greeting-main">早上好，{DATA.agent.name}！</div>
+          <div className="greeting-sub">{DATA.agent.org}</div>
+        </div>
+        <div className="row" style={{ gap: 14 }}>
+          <div className="notif-bell">🔔</div>
+          <div className="avatar-circle">{DATA.agent.initials}</div>
+        </div>
+      </div>
+
+      <div className="screen-body">
+
+        {/* AI 主动提醒卡片 */}
+        <div className="card-gold">
+          <AIBadge type="crm">客户经营智能体 · 月末盘客提醒</AIBadge>
+          <p className="mt-8 fs-13 lh-16" style={{ color:'var(--text-2)' }}>
+            王芳老师，司庆季即将来临，建议您现在盘点下月重点客户！
+          </p>
+          <div style={{ marginTop: 10, display:'grid', gridTemplateColumns:'1fr 1fr', gap: 6 }}>
+            {[
+              ['🏦','银行存款到期客户','5位'],
+              ['💰','旺财余额>5万','3位'],
+              ['📊','资产规模>600万','10位'],
+              ['🔁','三年前购买理财','2位'],
+            ].map(([icon,label,count]) => (
+              <div key={label} style={{ background:'rgba(255,255,255,0.04)', borderRadius:'var(--r-sm)', padding:'8px 10px' }}>
+                <div style={{ fontSize: 13 }}>{icon} <span style={{ color:'var(--text-2)' }}>{label}</span></div>
+                <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize: 20, color:'var(--gold)', marginTop: 2 }}>{count}</div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 fs-12" style={{ color:'var(--text-3)' }}>
+            中高温客户8位，同类转化率约10%，建议冬快邀约拜访直接进行产品推介！
+          </p>
+          <div className="row mt-12" style={{ gap: 8 }}>
+            <button className="btn-primary" style={{ flex: 1 }} onClick={() => nav('prospect','prospect')}>查看客户列表</button>
+            <button className="btn-secondary" style={{ flex: 1, padding:'11px 0' }} onClick={() => nav('prospect','prospect')}>加入4月计划</button>
+          </div>
+        </div>
+
+        {/* 今日数据 */}
+        <div className="stats-grid">
+          {[
+            { to:DATA.agent.todayFollowUp,  suffix:'人',  decimals:0, label:'跟进客户', delay:100 },
+            { to:DATA.agent.todayPending,   suffix:'人',  decimals:0, label:'待触达',   delay:180 },
+            { to:DATA.agent.monthIncome/10000, suffix:'万', decimals:1, label:'本月佣金', delay:260 },
+            { to:DATA.agent.completionRate, suffix:'%',  decimals:0, label:'完成率',   delay:340 },
+          ].map(({ to, suffix, decimals, label, delay }) => (
+            <div key={label} className="stat-item">
+              <div className="stat-val"><CountUp to={to} suffix={suffix} decimals={decimals} delay={delay} /></div>
+              <div className="stat-label">{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* 今日待办 */}
+        <div className="card">
+          <div className="sec-title">今日待办（AI建议）</div>
+          {[
+            { client:'陈诚', action:'发送方案，准备促成',       p:'high', s:'needs'    },
+            { client:'张华', action:'活动邀约未回复，继续跟进', p:'mid',  s:'visit'    },
+            { client:'李芳', action:'存款下月到期，联系时机好', p:'mid',  s:'interact' },
+          ].map(({ client, action, p, s }) => (
+            <div key={client} className="task-item">
+              <PriBadge level={p} />
+              <div className="col" style={{ flex: 1 }}>
+                <span className="task-client">{client}</span>
+                <span className="task-action">{action}</span>
+              </div>
+              <button className="btn-gold-sm" onClick={() => nav(s, s === 'needs' ? null : s)}>去做</button>
+            </div>
+          ))}
+        </div>
+
+        {/* 智能体入口 */}
+        <div>
+          <div className="sec-title">智能体快捷入口</div>
+          <div className="row" style={{ gap: 10 }}>
+            <div className="agent-entry crm" onClick={() => nav('prospect','prospect')}>
+              <div className="ae-icon">👥</div>
+              <div className="ae-name">客户经营智能体</div>
+              <div className="ae-desc">圈客 · 触客 · 邀约</div>
+            </div>
+            <div className="agent-entry sales" onClick={() => nav('needs', null)}>
+              <div className="ae-icon">💼</div>
+              <div className="ae-name">销售智能体</div>
+              <div className="ae-desc">需求 · 方案 · 促成</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 司庆资料 */}
+        <div className="card">
+          <div className="row">
+            <span className="sec-title" style={{ flex:1, marginBottom:0 }}>📣 司庆季 · 主推资料</span>
+            <button className="btn-sm">查看全部</button>
+          </div>
+          <div className="row mt-8" style={{ gap: 8 }}>
+            <div className="card-2" style={{ flex:1, textAlign:'center', fontSize:12, color:'var(--text-2)', padding:'10px 8px' }}>
+              <div style={{ color:'var(--gold)', marginBottom:2 }}>🌸</div>平安添益·居家养老
+            </div>
+            <div className="card-2" style={{ flex:1, textAlign:'center', fontSize:12, color:'var(--text-2)', padding:'10px 8px' }}>
+              <div style={{ color:'var(--gold)', marginBottom:2 }}>✨</div>金草分红司庆版
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  SCREEN 2 — 圈客
+// ═══════════════════════════════════════════════════════════
+function ProspectScreen({ nav }) {
+  const [clients, setClients] = useState(DATA.recommendedClients);
+  const toggle = id => setClients(p => p.map(c => c.id === id ? {...c, checked: !c.checked} : c));
+  const count = clients.filter(c => c.checked).length;
+
+  return (
+    <div className="screen">
+      <Header title="4月重点客户推荐" sub={`共${clients.length}位 · 已选${count}位 · 按转化优先级排序`} />
+      <div className="screen-body">
+        <AIBadge type="crm">已为您筛选{clients.length}位高价值客户，中高温客户8位，同类转化率约10%</AIBadge>
+
+        {clients.map((c, idx) => (
+          <div key={c.id} className={`client-card s-item${c.excluded ? ' excluded' : ''}`}>
+            <div className="row" style={{ marginBottom: 8 }}>
+              <input type="checkbox" checked={c.checked} onChange={() => toggle(c.id)} />
+              <span className="client-card name">{c.name}</span>
+              <span style={{ fontSize:12, color:'var(--text-3)' }}>{c.age}岁</span>
+              <PriBadge level={c.priority} />
+              <div className="spacer" />
+              <span style={{ fontSize:11, color:'var(--gold)' }}>资产 {c.assets}</span>
+            </div>
+            <div className="client-card group">{c.group}</div>
+            <WarmthBar value={c.warmth} />
+            <div className="client-card reason mt-4">{c.reason}</div>
+            <div className="mt-4">
+              {c.tags.map(t => <span key={t} className="tag">{t}</span>)}
+            </div>
+            {c.excluded && (
+              <div className="mt-4" style={{ fontSize:12, color:'var(--red)' }}>
+                已手动排除 &nbsp;
+                <button className="btn-sm" onClick={() => toggle(c.id)}>恢复</button>
+              </div>
+            )}
+          </div>
+        ))}
+
+        <button className="btn-primary" disabled={count === 0} onClick={() => nav('plan', null)}>
+          ✨ 一键生成4月经营计划（{count}位客户）
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  SCREEN 3 — 经营计划
+// ═══════════════════════════════════════════════════════════
+function PlanScreen({ nav }) {
+  const [ready, setReady] = useState(false);
+  return (
+    <div className="screen">
+      <Header title="4月经营计划" sub={ready ? 'AI生成 · 共6项安排' : 'AI 生成中...'} onBack={() => nav('prospect','prospect')} rightLabel={ready ? '导出' : ''} />
+      <div className="screen-body">
+        {!ready
+          ? <AIGenerating type="crm" label="AI 正在为您生成4月经营计划..." duration={1800} onDone={() => setReady(true)} />
+          : <>
+              <div className="success-box reveal">
+                <div className="title">✅ 计划已生成，包含：</div>
+                <div>• {DATA.generatedPlan.length} 位客户拜访/触达计划</div>
+                <div>• 每位客户专属沟通话术</div>
+                <div>• 匹配的司庆季触达内容素材</div>
+              </div>
+              {DATA.generatedPlan.map((item, i) => (
+                <div key={i} className="plan-item s-item">
+                  <div className="plan-date">{item.date}</div>
+                  <div className="col" style={{ flex:1 }}>
+                    <span className="plan-client">{item.client}</span>
+                    <span className="plan-action">{item.action}</span>
+                  </div>
+                  <button className="btn-sm">查看话术</button>
+                </div>
+              ))}
+              <button className="btn-primary" onClick={() => nav('interact','interact')}>前往微信触达 →</button>
+              <button className="btn-secondary">修改计划</button>
+            </>
+        }
+      </div>
+    </div>
+  );
+}
+
+
+function ProcessBar() {
+  const steps = [
+    { label:'圈客',  status:'done',   icon:'✓' },
+    { label:'触客',  status:'active', icon:'💬' },
+    { label:'访/邀', status:'pending', icon:'🤝' },
+    { label:'成交',  status:'pending', icon:'＄' },
+    { label:'收尾',  status:'pending', icon:'✓' },
+  ];
+  return (
+    <div className="process-bar">
+      {steps.map(s => (
+        <div key={s.label} className="process-step">
+          <div className={`ps-icon ${s.status}`}>{s.status === 'done' ? '✓' : s.icon}</div>
+          <div className={`ps-label${s.status === 'active' ? ' active' : ''}`}>{s.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InteractScreen({ nav }) {
+  return (
+    <div className="screen">
+      <ProcessBar />
+      <Header title="触客 · 沟通备料" sub="陈诚" />
+      <div className="screen-body">
+
+        {/* 客户信息卡 */}
+        <div className="interact-client-card">
+          <div className="client-avatar-lg">陈</div>
+          <div className="col" style={{ flex:1 }}>
+            <div className="row" style={{ flexWrap:'wrap', gap:4 }}>
+              <span style={{ fontSize:16, fontWeight:700, color:'var(--text-1)' }}>陈诚</span>
+              <span className="tag tag-hot">高温客户</span>
+              <span className="tag">存款月底到期</span>
+            </div>
+            <div style={{ fontSize:12, color:'var(--text-3)', marginTop:3 }}>45岁</div>
+            <WarmthBar value={60} />
+          </div>
+          <div className="client-last-contact">
+            <div className="lc-label">上次互动</div>
+            <div className="lc-value">3天前</div>
+          </div>
+        </div>
+
+        {/* AI 沟通备料 */}
+        <div className="ai-analysis-box">
+          <AIBadge type="crm">客户经营智能体 · 沟通备料</AIBadge>
+          <div className="ai-analysis-text">
+            已读取陈先生近期互动记录：上次询问了<strong>基金亏损</strong>问题，对<strong>养老保障</strong>有明显兴趣。
+          </div>
+          <div className="ai-strategy">
+            建议本次沟通目标：关怀开场 → 引出存款到期话题 → 邀请财富讲座。已为您准备好以下材料 👇
+          </div>
+        </div>
+
+        {/* 开场话术 */}
+        <div>
+          <div className="script-section-hd">💬 开场话术</div>
+          <div className="script-text-box">
+            "陈先生，您好！最近资产情况还好吗？咋们那笔存款月底到期了，有没有想好后续怎么配置？市场波动大，稳健配置更重要。我们营业区本周有个<strong>财富管理讲座</strong>，专门讲在当前环境下如何做好资产保值，很多客户反馈很受益。我帮您预留个名额？"
+          </div>
+          <button className="btn-warm mt-8" onClick={() => nav('wechat-transition', null)}>
+            📋 复制话术并跳转企业微信
+          </button>
+        </div>
+
+        {/* 专属邀请函预览 */}
+        <div>
+          <div className="script-section-hd">🎫 专属邀请函（可直接转发）</div>
+          <div className="invite-preview-mini">
+            <div className="ipm-name">🏮 平安财富 · 司庆讲座</div>
+            <div className="ipm-row">📅 本周六 14:00–16:00</div>
+            <div className="ipm-row">📍 XX营业区三楼会议厅</div>
+            <div className="ipm-row">🎁 参与即享精美礼品</div>
+          </div>
+          <button className="btn-secondary mt-8">预览完整邀请函</button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  SCREEN 5 — 拜访：邀约内容生成
+// ═══════════════════════════════════════════════════════════
+function InviteScreen({ nav }) {
+  const [sent, setSent] = useState(false);
+  const d = DATA.inviteContent;
+  return (
+    <div className="screen">
+      <Header title="生成专属邀约内容" sub="陈诚" onBack={() => nav('interact','interact')} />
+      <div className="screen-body">
+
+        {/* 活动信息 */}
+        <div className="card">
+          <div style={{ fontSize:16, fontWeight:700, color:'var(--text-1)', fontFamily:"'Noto Serif SC',serif" }}>{d.event}</div>
+          <div className="mt-8 fs-13" style={{ color:'var(--text-2)' }}>📅 {d.date}</div>
+          <div className="fs-13" style={{ color:'var(--text-2)' }}>📍 {d.location}</div>
+        </div>
+
+        <AIBadge type="crm">已根据陈诚的兴趣偏好定制以下内容</AIBadge>
+
+        {/* 邀请函预览 */}
+        <div className="invite-card">
+          <div className="invite-card-sub">专属邀请函</div>
+          <div className="invite-card-event">{d.event}</div>
+          <div className="invite-card-divider" />
+          <div className="invite-card-meta">📅 {d.date}</div>
+          <div className="invite-card-meta">📍 {d.location}</div>
+          <div className="invite-card-divider" />
+          {d.highlights.map((h, i) => <div key={i} className="invite-card-highlight">· {h}</div>)}
+          <div className="invite-card-from">— {d.from} 敬邀</div>
+        </div>
+
+        {/* 微信文案 */}
+        <div className="card">
+          <div className="sec-title">微信消息版</div>
+          <div className="wechat-copy mt-8">{d.wechatMsg}</div>
+          <div className="row mt-8" style={{ justifyContent:'flex-end' }}>
+            <button className="btn-sm">复制文案</button>
+          </div>
+        </div>
+
+        {!sent ? (
+          <>
+            <button className="btn-primary" onClick={() => setSent(true)}>一键发送邀请函</button>
+            <button className="btn-secondary" onClick={() => setSent(true)}>一键发送文案</button>
+          </>
+        ) : (
+          <div className="sent-box success-pop">
+            <div className="title">✅ 已发送！陈诚已同意参加活动 🎉</div>
+            <p className="fs-13 lh-16" style={{ color:'var(--text-2)' }}>活动结束后，请将客户情况告诉我，我帮您整理生成客户档案。</p>
+            <button className="btn-primary mt-12" onClick={() => nav('profile-capture',null)}>
+              活动结束，录入客户信息 →
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  SCREEN 6 — 活动后客户档案
+// ═══════════════════════════════════════════════════════════
+function ProfileCaptureScreen({ nav }) {
+  const [input, setInput]         = useState('');
+  const [phase, setPhase]         = useState('idle'); // idle | loading | done
+  const sample = '陈诚今天来了，对养老险很感兴趣，提到自己现在每年收入大概50万，担心退休后生活质量下降，家里还有老人要照顾';
+  const p = DATA.clientProfile;
+
+  return (
+    <div className="screen">
+      <Header title="活动后 · 生成客户档案" onBack={() => nav('invite','visit')} />
+      <div className="screen-body">
+        <AIBadge type="crm">告诉我陈诚在活动中的情况</AIBadge>
+        <p className="fs-13" style={{ color:'var(--text-2)' }}>请用语音或文字描述客户在活动中的反应、兴趣点和关键信息：</p>
+
+        <div className="card">
+          <textarea rows={4} placeholder="语音/文字描述客户活动情况..." value={input} onChange={e => setInput(e.target.value)} />
+          <button className="btn-sm mt-8" onClick={() => setInput(sample)}>🎤 填入示例内容</button>
+        </div>
+
+        {phase === 'idle' && (
+          <button className="btn-primary" disabled={!input} onClick={() => setPhase('loading')}>
+            ✨ 一键生成客户档案
+          </button>
+        )}
+        {phase === 'loading' && (
+          <AIGenerating type="crm" label="AI 正在整理客户档案信息..." duration={2000} onDone={() => setPhase('done')} />
+        )}
+        {phase === 'done' && (
+          <div className="profile-card reveal">
+            <div className="row" style={{ marginBottom:10 }}>
+              <div>
+                <div className="profile-name">{p.name}</div>
+                <div className="profile-meta">{p.age}岁 · {p.occupation}</div>
+              </div>
+              <div className="spacer" />
+              <PriBadge level={p.priority} />
+            </div>
+            {[['资产规模',p.assets],['年收入',`约${p.annualIncome}万`],['家庭结构',p.family]].map(([k,v]) => (
+              <div key={k} className="profile-row"><span className="k">{k}</span><span className="v">{v}</span></div>
+            ))}
+            <p className="fs-12 lh-16 mt-8" style={{ color:'var(--text-3)' }}>📝 {p.activityNote}</p>
+            <div className="mt-8">{p.interests.map(t => <span key={t} className="tag tag-gold">{t}</span>)}</div>
+            <div className="profile-next mt-8">→ 建议下一步：{p.nextStep}</div>
+            <button className="btn-primary mt-12" onClick={() => nav('needs',null)}>立即设计方案 →</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  SCREEN 7 — 销售智能体：需求分析
+// ═══════════════════════════════════════════════════════════
+function NeedsScreen({ nav }) {
+  const [ready, setReady] = useState(false);
+  const d = DATA.needsAnalysis;
+  return (
+    <div className="screen">
+      <Header title="需求分析报告" sub="销售智能体 · 陈诚" onBack={() => nav('home','home')} rightLabel="📄" />
+      <div className="screen-body">
+        <AIBadge type="sales" />
+        {!ready
+          ? <AIGenerating type="sales" label="AI 正在解析客户需求..." duration={1600} onDone={() => setReady(true)} />
+          : <>
+              <div className="portrait-card s-item">
+                <div className="sec-title">客户画像</div>
+                <div className="fs-15 fw-7" style={{ color:'var(--text-1)' }}>
+                  陈诚 · {d.portrait.age}岁 · {d.portrait.group}
+                </div>
+                <div className="fs-13 mt-4" style={{ color:'var(--text-3)' }}>年收入：{d.portrait.income}</div>
+              </div>
+
+              <div className="card s-item">
+                <div className="sec-title">⚠️ 风险诊断</div>
+                {d.risks.map((r,i) => <div key={i} className="risk-item">{r}</div>)}
+              </div>
+
+              <div className="card s-item">
+                <div className="sec-title">📊 保障缺口测算</div>
+                <table className="data-table" style={{ marginTop:8 }}>
+                  <thead><tr><th>缺口类型</th><th>当前状态</th><th>缺口金额</th></tr></thead>
+                  <tbody>
+                    {d.gaps.map((g,i) => (
+                      <tr key={i}>
+                        <td style={{ color:'var(--text-2)' }}>{g.type}</td>
+                        <td style={{ color:'var(--red)' }}>{g.current}</td>
+                        <td className="val-red"><CountUp to={g.amount} suffix={g.unit} duration={900} delay={300+i*200} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="row mt-8" style={{ alignItems:'flex-end', gap:6 }}>
+                  <span className="gap-total-label">总缺口：</span>
+                  <span className="gap-total"><CountUp to={d.totalGap} suffix="万" duration={1000} delay={700} /></span>
+                </div>
+              </div>
+
+              <div className="card s-item">
+                <div className="sec-title">核心需求</div>
+                <div className="mt-8">{d.coreNeeds.map(n => <span key={n} className="need-pill">{n}</span>)}</div>
+              </div>
+
+              <button className="btn-primary" onClick={() => nav('product',null)}>查看推荐方案 →</button>
+            </>
+        }
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  SCREEN 8 — 销售智能体：产品方案
+// ═══════════════════════════════════════════════════════════
+function ProductScreen({ nav }) {
+  const d = DATA.product;
+  const maxH = Math.max(...d.chartData.map(x => x.high));
+  const scale = 80 / maxH;
+  // Chart bars animate from 0 → target height after mount
+  const [chartReady, setChartReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setChartReady(true), 350); return () => clearTimeout(t); }, []);
+
+  return (
+    <div className="screen">
+      <Header title="专属保险方案" sub="陈诚" onBack={() => nav('needs', null)} rightLabel="分享 📤" />
+      <div className="screen-body">
+
+        {/* 产品主卡 */}
+        <div className="product-hero">
+          <span className="product-tag">{d.tag}</span>
+          <div className="product-name">{d.name}</div>
+          <div className="product-sub">{d.subName}</div>
+          <div className="product-params">
+            {[
+              { val: d.annualPremium+'万', label:'年交保费' },
+              { val: d.paymentYears+'年',  label:'交费年限' },
+              { val: d.totalPremium+'万',  label:'总保费'   },
+            ].map(({ val, label }) => (
+              <div key={label} className="param-block">
+                <div className="param-val">{val}</div>
+                <div className="param-label">{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 收益亮点 */}
+        <div className="card">
+          <div className="sec-title">收益亮点</div>
+          {d.features.map((f, i) => (
+            <div key={i} className="feature-row">
+              <div className="feature-icon">{f.icon}</div>
+              <div>
+                <div className="feature-title">{f.title}</div>
+                <div className="feature-desc">{f.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 收益演示 */}
+        <div className="card">
+          <div className="sec-title">📈 收益演示（万元）</div>
+          <div className="row mt-4" style={{ gap: 12, fontSize: 11, color:'var(--text-3)' }}>
+            <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:'rgba(80,98,120,0.6)', display:'inline-block' }} />低档</span>
+            <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:'var(--gold)', display:'inline-block' }} />中档</span>
+            <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:10, height:10, borderRadius:2, background:'var(--crm-1)', display:'inline-block' }} />高档</span>
+          </div>
+          <div className="bar-chart-wrap mt-8">
+            {d.chartData.map((item, i) => (
+              <div key={i} className="bar-group">
+                <div className="bars">
+                  <div className="bar b-low"  style={{ height: chartReady ? Math.round(item.low  * scale)+'px' : '2px', transitionDelay: (i*0.12)+'s' }} />
+                  <div className="bar b-mid"  style={{ height: chartReady ? Math.round(item.mid  * scale)+'px' : '2px', transitionDelay: (i*0.12+0.05)+'s' }} />
+                  <div className="bar b-high" style={{ height: chartReady ? Math.round(item.high * scale)+'px' : '2px', transitionDelay: (i*0.12+0.10)+'s' }} />
+                </div>
+                <span className="bar-year">{item.year}年</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 价值提示 */}
+        <div className="card" style={{ fontSize:13, color:'var(--text-2)' }}>
+          💡 方案解决了陈诚的{d.solvesGap}
+        </div>
+
+        {/* 代理人收入 */}
+        <div className="income-highlight">
+          <span className="income-label">💰 您的预计收入</span>
+          <div>
+            <span className="income-val gold-pulse"><CountUp to={d.agentIncome} duration={1200} delay={400} /></span>
+            <span className="income-unit">元</span>
+          </div>
+        </div>
+
+        <button className="btn-primary" onClick={() => nav('script', null)}>查看讲解话术</button>
+        <button className="btn-secondary" onClick={() => nav('wechat-product-chat', null)}>发送方案给客户</button>
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  SCREEN 9 — 销售智能体：话术推荐
+// ═══════════════════════════════════════════════════════════
+function ScriptScreen({ nav }) {
+  const [open, setOpen] = useState(0);
+  const steps = DATA.salesScript.steps;
+  return (
+    <div className="screen">
+      <Header title="方案讲解话术" sub="陈诚" onBack={() => nav('product', null)} />
+      <div className="screen-body">
+        <AIBadge type="sales">建议按以下5步逻辑讲解</AIBadge>
+
+        {steps.map((s, i) => (
+          <div key={i} className="step-card s-item">
+            <div className="step-header" onClick={() => setOpen(open === i ? -1 : i)}>
+              <div className="step-num">{s.step}</div>
+              <span className="step-title">{s.title}</span>
+              <span className="step-arrow">{open === i ? '▲' : '▼'}</span>
+            </div>
+            {open === i && (
+              <div className="step-content reveal">
+                {s.script && (
+                  <div className="script-quote">
+                    <TypedText text={s.script} speed={10} />
+                  </div>
+                )}
+                {s.qa && s.qa.map((qa, j) => (
+                  <div key={j}>
+                    <div className="qa-q">Q: {qa.q}</div>
+                    <div className="qa-a">A: {qa.a}</div>
+                  </div>
+                ))}
+                <div className="row mt-8" style={{ justifyContent:'flex-end', gap:8 }}>
+                  <button className="btn-sm">复制</button>
+                  <button className="btn-sm">收藏</button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        <button className="btn-primary">🎙 开始录音演练</button>
+        <button className="btn-secondary">收藏全套话术</button>
+
+        {/* 收尾 */}
+        <div className="sent-box success-pop">
+          <div className="title">🎉 在万能营销助手的帮助下</div>
+          <p className="fs-13 lh-16 mt-4" style={{ color:'var(--text-2)' }}>
+            客户经营、促成转化效率明显提升！本次陈诚成交预计佣金收入：
+          </p>
+          <div className="gold-pulse" style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:32, color:'var(--gold)', marginTop:6, letterSpacing:'0.04em' }}>
+            <CountUp to={16880} duration={1400} delay={300} /> <span style={{ fontSize:16 }}>元</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  SCREEN 10 — 拜访 Tab 入口
+// ═══════════════════════════════════════════════════════════
+function VisitScreen({ nav }) {
+  return (
+    <div className="screen">
+      <Header title="拜访 · 邀约" />
+      <div className="screen-body">
+        <div className="sec-title">待邀约客户</div>
+        {DATA.recommendedClients.filter(c => c.checked).slice(0, 4).map(c => (
+          <div key={c.id} className="client-card">
+            <div className="row">
+              <div className="col" style={{ flex: 1 }}>
+                <div className="row">
+                  <span style={{ fontWeight:700, fontSize:15, color:'var(--text-1)' }}>{c.name}</span>
+                  <PriBadge level={c.priority} />
+                </div>
+                <span style={{ fontSize:12, color:'var(--text-2)' }}>{c.nextAction}</span>
+              </div>
+              <button className="btn-gold-sm" onClick={() => nav('invite','visit')}>生成邀约</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  SCREEN 11 — 我的
+// ═══════════════════════════════════════════════════════════
+function ProfileScreen() {
+  const a = DATA.agent;
+  return (
+    <div className="screen">
+      <div className="screen-body" style={{ alignItems:'center', paddingTop: 32 }}>
+        <div className="avatar-circle" style={{ width:72, height:72, fontSize:28 }}>{a.initials}</div>
+        <div style={{ fontFamily:"'Noto Serif SC',serif", fontSize:22, fontWeight:700, color:'var(--text-1)', marginTop:12 }}>{a.name}</div>
+        <div style={{ fontSize:13, color:'var(--gold)', marginTop:4 }}>{a.level}</div>
+        <div style={{ fontSize:12, color:'var(--text-3)', marginTop:2 }}>{a.org}</div>
+        <div className="card-gold" style={{ width:'100%', marginTop:24 }}>
+          <div className="sec-title">本月业绩</div>
+          <div className="row mt-12" style={{ justifyContent:'center', gap: 32 }}>
+            {[
+              { val:(a.monthIncome/10000).toFixed(1)+'万', label:'已到账佣金' },
+              { val:a.completionRate+'%',                   label:'目标完成率' },
+            ].map(({ val, label }) => (
+              <div key={label} style={{ textAlign:'center' }}>
+                <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:32, color:'var(--gold)', letterSpacing:'0.04em' }}>{val}</div>
+                <div style={{ fontSize:12, color:'var(--text-3)', marginTop:2 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  APP SHELL
+// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+//  SCREEN: 企业微信跳转过渡
+// ═══════════════════════════════════════════════════════════
+function WechatTransitionScreen({ nav }) {
+  const [progress, setProgress] = useState(0);
+  const doneRef = useRef(false);
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setProgress(p => {
+        const next = p + 3.5;
+        if (next >= 100) { clearInterval(iv); return 100; }
+        return next;
+      });
+    }, 50);
+    return () => clearInterval(iv);
+  }, []);
+
+  useEffect(() => {
+    if (progress >= 100 && !doneRef.current) {
+      doneRef.current = true;
+      const t = setTimeout(() => nav('wechat-chat', null), 500);
+      return () => clearTimeout(t);
+    }
+  }, [progress]);
+
+  return (
+    <div className="wechat-transition">
+      <div className="wct-icon-wrap">
+        <div className="wct-icon">💬</div>
+        <div className="wct-bot-badge">🤖</div>
+      </div>
+      <div className="wct-title">正在跳转企业微信...</div>
+      <div className="wct-sub">
+        AI助手已将话术复制到剪贴板<br />进入微信后直接粘贴即可
+      </div>
+      <div className="wct-progress-track">
+        <div className="wct-progress-fill" style={{ width: Math.min(progress,100)+'%' }} />
+      </div>
+      <div className="wct-companion">AI 助手将在企业微信内持续陪伴</div>
+      <div className="wct-status">✓ 话术已复制，正在跳转企业微信...</div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SCREEN: 企业微信聊天模拟
+// ═══════════════════════════════════════════════════════════
+function WechatChatScreen({ nav }) {
+  const [chatPhase, setChatPhase] = useState(0);
+  // 0: show 2 msgs + script panel
+  // 1: script sent (3 msgs), typing indicator
+  // 2: client replied (4 msgs) + invite panel
+  const endRef = useRef(null);
+
+  const allMsgs = [
+    { id:1, from:'agent',  text:'陈先生，您好！最近资产情况还好吗？咋们那笔存款月底到期了，有没有想好后续怎么配置？', time:'上午 10:23' },
+    { id:2, from:'client', text:'哎，最近行情不好，基金亏了不少。存款到期是打算先放银行吧，利率低也没办法。' },
+    { id:3, from:'agent',  text:'陈先生理解您！市场波动大，稳健配置更重要。我们营业区本周有个财富管理讲座，专门讲在当前环境下如何做好资产保值，很多客户反馈很受益。我帮您预留个名额？', minPhase:1 },
+    { id:4, from:'client', text:'好啊，可以的，什么时间？', minPhase:2 },
+  ];
+
+  const visibleMsgs = allMsgs.filter(m => !m.minPhase || chatPhase >= m.minPhase);
+
+  const sendScript = useCallback(() => {
+    setChatPhase(1);
+    setTimeout(() => setChatPhase(2), 2200);
+  }, []);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior:'smooth' });
+  }, [chatPhase]);
+
+  return (
+    <div className="wechat-screen">
+
+      {/* Header */}
+      <div className="wechat-header">
+        <button className="wc-back" onClick={() => nav('interact','interact')}>‹</button>
+        <div className="wc-avatar">陈</div>
+        <div className="col" style={{ gap:0 }}>
+          <span className="wc-contact-name">陈诚</span>
+          <span className="wc-contact-sub">企业微信</span>
+        </div>
+        <div className="wc-ai-badge">
+          <span className="wc-ai-dot" />
+          AI辅助中
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div className="wc-messages">
+        <div className="wc-timestamp"><span>上午 10:23</span></div>
+        {visibleMsgs.map((m, i) => (
+          <div key={m.id} className={`wc-row${m.from==='agent' ? ' sent' : ''}${m.minPhase && m.minPhase === chatPhase ? ' msg-new' : ''}`}>
+            <div className={`wc-msg-avatar ${m.from==='client' ? 'client' : 'agent'}`}>
+              {m.from==='client' ? '陈' : '芳'}
+            </div>
+            <div className={`wc-bubble ${m.from==='agent' ? 'sent' : 'received'}`}>
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {chatPhase === 1 && (
+          <div className="wc-row msg-new">
+            <div className="wc-msg-avatar client">陈</div>
+            <div className="wc-typing-bubble">
+              <div className="wc-typing-dot" />
+              <div className="wc-typing-dot" />
+              <div className="wc-typing-dot" />
+            </div>
+          </div>
+        )}
+        <div ref={endRef} />
+      </div>
+
+      {/* AI Floating Panel */}
+      {chatPhase !== 1 && (
+        <div className="wc-ai-panel" key={chatPhase}>
+          {chatPhase === 0 && (
+            <>
+              <div className="wc-panel-header">
+                <div className="wc-panel-ai-badge">🤖 AI实时辅助 · 话术推荐</div>
+                <span className="wc-panel-collapse">收起</span>
+              </div>
+              <div className="wc-panel-body">
+                <div className="wc-hint">
+                  💡 客户提到<strong>基金亏损</strong>，情绪偏负面。建议先<strong>共情安抚</strong>，再引导到稳健配置和活动邀请：
+                </div>
+                <div className="wc-script-quote">
+                  "陈先生理解您！市场波动大，稳健配置更重要。我们营业区本周有个<strong>财富管理讲座</strong>，专门讲在当前环境下如何做好资产保值，很多客户反馈很受益。我帮您预留个名额？"
+                </div>
+                <div className="wc-panel-btns">
+                  <button className="wc-btn-outline">📋 复制</button>
+                  <button className="wc-btn-dark" onClick={sendScript}>⚡ 一键发送</button>
+                </div>
+              </div>
+            </>
+          )}
+          {chatPhase === 2 && (
+            <>
+              <div className="wc-panel-header">
+                <div className="wc-panel-ai-badge">🤖 AI实时辅助 · 邀请函</div>
+                <span className="wc-panel-collapse">收起</span>
+              </div>
+              <div className="wc-panel-body">
+                <div className="wc-hint">🎉 客户已有意愿！建议立即发送<strong>专属邀请函</strong>确认参与。</div>
+                <div className="wc-invite-card">
+                  <div className="wc-invite-event">🏮 平安财富 · 司庆讲座</div>
+                  <div className="wc-invite-row">📅 本周六 14:00–16:00</div>
+                  <div className="wc-invite-row">📍 XX营业区三楼会议厅</div>
+                  <div className="wc-invite-row">🎁 参与即享精美礼品</div>
+                </div>
+                <div className="wc-panel-btns">
+                  <button className="wc-btn-outline">✏️ 编辑</button>
+                  <button className="wc-btn-red" onClick={() => nav('profile-capture', null)}>📩 发送邀请函</button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Input bar */}
+      <div className="wc-input-bar">
+        <span className="wc-input-icon">😊</span>
+        <div className="wc-input-field">输入消息...</div>
+        <span className="wc-input-icon">⊕</span>
+        <span className="wc-input-icon" style={{ fontSize:18 }}>🎤</span>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SCREEN: 企业微信发送方案卡片
+// ═══════════════════════════════════════════════════════════
+function WechatProductChatScreen({ nav }) {
+  const [phase, setPhase] = useState(0);
+  // 0: 浮层显示方案卡片，待确认
+  // 1: 卡片已发送至对话，浮层变为成功提示
+  const endRef = useRef(null);
+
+  const sendPlan = useCallback(() => { setPhase(1); }, []);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [phase]);
+
+  const PlanCard = () => (
+    <div className="wc-plan-card-bubble">
+      <div className="wc-plan-card-header">
+        <div className="wc-plan-card-badge">🤖 AI智能推荐 · 专属方案</div>
+        <div className="wc-plan-card-name">平安盛世金越（终身寿险）</div>
+        <div className="wc-plan-card-sub">量身定制 · 资产保值首选</div>
+      </div>
+      <div className="wc-plan-card-body">
+        <div className="wc-plan-card-params">
+          {[{v:'5万',label:'年交保费'},{v:'20年',label:'交费年限'},{v:'100万',label:'总保费'}].map(p => (
+            <div key={p.label} className="wc-plan-card-param">
+              <div className="wc-plan-card-param-val">{p.v}</div>
+              <div className="wc-plan-card-param-label">{p.label}</div>
+            </div>
+          ))}
+        </div>
+        <div className="wc-plan-card-hl">📈 40年后预计领取 <strong>188万元</strong>，年化复利约3.5%</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="wechat-screen">
+
+      {/* Header */}
+      <div className="wechat-header">
+        <button className="wc-back" onClick={() => nav('product', null)}>‹</button>
+        <div className="wc-avatar">陈</div>
+        <div className="col" style={{ gap:0 }}>
+          <span className="wc-contact-name">陈诚</span>
+          <span className="wc-contact-sub">企业微信</span>
+        </div>
+        <div className="wc-ai-badge">
+          <span className="wc-ai-dot" />
+          AI辅助中
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div className="wc-messages">
+        <div className="wc-timestamp"><span>上午 11:05</span></div>
+
+        <div className="wc-row sent">
+          <div className="wc-msg-avatar agent">芳</div>
+          <div className="wc-bubble sent">陈先生，根据您的情况我定制了一份专属保险规划，给您参考一下？</div>
+        </div>
+
+        <div className="wc-row">
+          <div className="wc-msg-avatar client">陈</div>
+          <div className="wc-bubble received">好的，发过来看看</div>
+        </div>
+
+        {phase >= 1 && (
+          <div className="wc-row sent msg-new">
+            <div className="wc-msg-avatar agent">芳</div>
+            <PlanCard />
+          </div>
+        )}
+
+        <div ref={endRef} />
+      </div>
+
+      {/* AI Floating Panel */}
+      <div className="wc-ai-panel" key={phase}>
+        {phase === 0 && (
+          <>
+            <div className="wc-panel-header">
+              <div className="wc-panel-ai-badge">🤖 AI辅助 · 确认发送专属方案</div>
+              <span className="wc-panel-collapse">收起</span>
+            </div>
+            <div className="wc-panel-body">
+              <div className="wc-hint">💡 已为<strong>陈诚</strong>生成专属方案卡片，确认后发送至企业微信：</div>
+              {/* 方案卡片预览 */}
+              <div className="wc-plan-preview">
+                <div className="wc-plan-preview-hd">
+                  <div className="wc-plan-preview-badge">🤖 AI智能推荐 · 专属方案</div>
+                  <div className="wc-plan-preview-name">平安盛世金越（终身寿险）</div>
+                </div>
+                <div className="wc-plan-preview-bd">
+                  <div className="wc-plan-preview-params">
+                    {[{v:'5万',l:'年交保费'},{v:'20年',l:'交费年限'},{v:'100万',l:'总保费'}].map(p => (
+                      <div key={p.l} className="wc-plan-preview-param">
+                        <div className="wc-pp-val">{p.v}</div>
+                        <div className="wc-pp-label">{p.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="wc-plan-preview-hl">📈 40年后预计领取 <strong>188万元</strong>，年化复利约3.5%</div>
+                </div>
+              </div>
+              <div className="wc-panel-btns">
+                <button className="wc-btn-outline">✏️ 编辑</button>
+                <button className="wc-btn-dark" onClick={sendPlan}>📤 确认发送</button>
+              </div>
+            </div>
+          </>
+        )}
+        {phase === 1 && (
+          <>
+            <div className="wc-panel-header">
+              <div className="wc-panel-ai-badge">✅ 方案卡片已发送</div>
+              <span className="wc-panel-collapse">收起</span>
+            </div>
+            <div className="wc-panel-body">
+              <div className="wc-success-hint">
+                🎉 专属方案已发送给陈诚！建议24小时内跟进，了解客户想法并引导成交。
+              </div>
+              <div className="wc-panel-btns">
+                <button className="wc-btn-outline" onClick={() => nav('product', null)}>返回方案</button>
+                <button className="wc-btn-dark" onClick={() => nav('script', null)}>查看讲解话术 →</button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Input bar */}
+      <div className="wc-input-bar">
+        <span className="wc-input-icon">😊</span>
+        <div className="wc-input-field">输入消息...</div>
+        <span className="wc-input-icon">⊕</span>
+        <span className="wc-input-icon" style={{ fontSize:18 }}>🎤</span>
+      </div>
+    </div>
+  );
+}
+
+const TABS = [
+  { id:'home',     label:'首页', icon:'🏠' },
+  { id:'prospect', label:'圈客', icon:'👥' },
+  { id:'interact', label:'触客', icon:'💬' },
+  { id:'visit',    label:'拜访', icon:'📅' },
+  { id:'profile',  label:'我的', icon:'👤' },
+];
+const SUB_SCREENS = new Set(['plan','invite','profile-capture','needs','product','script','wechat-transition','wechat-chat','wechat-product-chat']);
+
+function App() {
+  const [screen,  setScreen]  = useState('home');
+  const [tab,     setTab]     = useState('home');
+  const [animDir, setAnimDir] = useState('tab');
+  const [animKey, setAnimKey] = useState(0);
+  const prevScreen = useRef('home');
+
+  const nav = useCallback((s, t) => {
+    const prev = prevScreen.current;
+    let dir;
+    if (t) {
+      dir = 'tab';                                    // 底部 Tab 切换 → 淡入
+    } else if (SUB_SCREENS.has(s)) {
+      dir = 'forward';                                // 进入子页 → 右滑入
+    } else if (SUB_SCREENS.has(prev) && !SUB_SCREENS.has(s)) {
+      dir = 'back';                                   // 返回主页 → 左滑回
+    } else {
+      dir = 'forward';
+    }
+    prevScreen.current = s;
+    setAnimDir(dir);
+    setAnimKey(k => k + 1);
+    setScreen(s);
+    if (t) setTab(t);
+  }, []);
+
+  const renderScreen = () => {
+    switch (screen) {
+      case 'home':            return <HomeScreen           nav={nav} />;
+      case 'prospect':        return <ProspectScreen       nav={nav} />;
+      case 'plan':            return <PlanScreen           nav={nav} />;
+      case 'interact':          return <InteractScreen           nav={nav} />;
+      case 'wechat-transition': return <WechatTransitionScreen   nav={nav} />;
+      case 'wechat-chat':       return <WechatChatScreen         nav={nav} />;
+      case 'wechat-product-chat': return <WechatProductChatScreen nav={nav} />;
+      case 'visit':           return <VisitScreen          nav={nav} />;
+      case 'invite':          return <InviteScreen         nav={nav} />;
+      case 'profile-capture': return <ProfileCaptureScreen nav={nav} />;
+      case 'needs':           return <NeedsScreen          nav={nav} />;
+      case 'product':         return <ProductScreen        nav={nav} />;
+      case 'script':          return <ScriptScreen         nav={nav} />;
+      case 'profile':         return <ProfileScreen />;
+      default:                return <HomeScreen           nav={nav} />;
+    }
+  };
+
+  return (
+    <div id="phone-bezel">
+      <div id="app-shell">
+        <StatusBar />
+        {/* screen-wrap 同时作为动画容器 & flex 占位 */}
+        <div key={animKey} className={`screen-wrap anim-${animDir}`}>
+          {renderScreen()}
+        </div>
+        {!SUB_SCREENS.has(screen) && (
+          <nav id="bottom-nav">
+            {TABS.map(t => (
+              <button key={t.id} className={`nav-tab${tab === t.id ? ' active' : ''}`} onClick={() => nav(t.id, t.id)}>
+                <span className="nav-icon">{t.icon}</span>
+                <span>{t.label}</span>
+              </button>
+            ))}
+          </nav>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
